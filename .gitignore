@@ -1,0 +1,16 @@
+# Server files (not needed for GitHub Pages)
+*server.py
+*_server.py
+*.crt
+*.key
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Temporary files
+temp_*
+simple.*

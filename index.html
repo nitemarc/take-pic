@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TakePic - Aplikacja do robienia zdjęć</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>📸 TakePic</h1>
+            <p>Rób piękne zdjęcia swoją kamerką</p>
+        </header>
+        
+        <main class="main-content">
+            <div class="camera-section">
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
+                <div class="filters-section">
+                    <h3>🎨 Filtry Real-time</h3>
+                    <div class="filters-grid">
+                        <button class="filter-btn active" data-filter="none">Oryginalny</button>
+                        <button class="filter-btn" data-filter="contrast">Kontrast</button>
+                        <button class="filter-btn" data-filter="sepia">Sepia</button>
+                    </div>
+                </div>
+                
+                
+                <div class="camera-controls">
+                    <button id="startCamera" class="btn btn-primary">🎥 Włącz kamerę</button>
+                    <button id="capturePhoto" class="btn btn-capture" disabled>📷 Zrób zdjęcie</button>
+                    <button id="stopCamera" class="btn btn-secondary" disabled>⏹️ Zatrzymaj</button>
+                </div>
+            </div>
+            
+            <div class="photos-section">
+                <h2>Ostatnie zdjęcia</h2>
+                <div class="photos-grid" id="photosGrid">
+                    <div class="photo-slot empty">📷</div>
+                    <div class="photo-slot empty">📷</div>
+                    <div class="photo-slot empty">📷</div>
+                </div>
+                <div class="photo-actions">
+                    <button id="clearPhotos" class="btn btn-danger">🗑️ Wyczyść wszystkie</button>
+                    <button id="downloadPhoto" class="btn btn-download" disabled>💾 Pobierz wybrane</button>
+                    <button id="photoBooth" class="btn btn-special" disabled>📸 Fotobudka</button>
+                </div>
+            </div>
+        </main>
+        
+        <div id="notification" class="notification hidden"></div>
+    </div>
+    
+    <script src="nagroda-data.js?v=3"></script>
+    <script src="particles.js?v=3"></script>
+    <script src="script.js?v=3"></script>
+</body>
+</html>
