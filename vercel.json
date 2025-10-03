@@ -1,18 +1,8 @@
 {
-  "version": 2,
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/photobooth.py",
-      "use": "@vercel/python"
+      "source": "/api/photobooth",
+      "destination": "/api/photobooth.py"
     }
-  ],
-  "routes": [
-    {
-      "src": "/api/photobooth",
-      "dest": "/api/photobooth.py"
-    }
-  ],
-  "env": {
-    "GEMINI_API_KEY": "@gemini_api_key"
-  }
+  ]
 }
