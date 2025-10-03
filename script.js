@@ -570,10 +570,7 @@ class TakePicApp {
                         text: prompt
                     }
                 ]
-            }],
-            generationConfig: {
-                responseMimeType: "image/jpeg"
-            }
+            }]
         };
 
         console.log('📸 Sending PhotoBooth request to proxy...');
