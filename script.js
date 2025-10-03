@@ -593,6 +593,11 @@ class TakePicApp {
         const data = await response.json();
         console.log('Proxy API Response received', data);
 
+        // Debug: show full structure
+        if (data.candidates && data.candidates[0]) {
+            console.log('📊 Candidate structure:', JSON.stringify(data.candidates[0], null, 2));
+        }
+
         if (data.error) {
             console.error('❌ API returned error:', data.error);
             throw new Error(data.error);
