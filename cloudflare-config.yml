@@ -1,0 +1,16 @@
+tunnel: ilovemkt-conference
+credentials-file: /Users/marek/Claude Code/takepic/.cloudflared/credentials.json
+
+ingress:
+  # Frontend HTTPS (port 8000)
+  - hostname: ilovemkt.app
+    service: https://localhost:8000
+    originRequest:
+      noTLSVerify: true
+
+  # API Proxy (port 5001)
+  - hostname: api.ilovemkt.app
+    service: http://localhost:5001
+
+  # Catch-all rule
+  - service: http_status:404

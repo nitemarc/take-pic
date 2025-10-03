@@ -1,3 +1,6 @@
+# Environment variables (IMPORTANT - contains API keys)
+.env
+
 # Server files (not needed for GitHub Pages)
 *server.py
 *_server.py
@@ -14,3 +17,6 @@ __pycache__/
 # Temporary files
 temp_*
 simple.*
+
+# Node modules
+node_modules/

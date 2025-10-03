@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Fotobudka - I ❤️ Marketing & Technology</title>
+    <link rel="stylesheet" href="photobooth-style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <a href="index.html" class="back-btn">← Powrót</a>
+            <div class="logo-header">
+                <h1>I <span class="heart">❤️</span> MARKETING</h1>
+                <p class="subtitle">& TECHNOLOGY</p>
+            </div>
+            <div class="header-hashtag">#ilovemkt</div>
+        </header>
+
+        <main class="main-content">
+            <div class="camera-section">
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
+
+                <div class="camera-controls">
+                    <button id="startCamera" class="btn btn-start">🎥 Włącz kamerę</button>
+                    <button id="capturePhoto" class="btn btn-capture" disabled>📷 Zrób zdjęcie</button>
+                    <button id="stopCamera" class="btn btn-stop" disabled>⏹️ Zatrzymaj</button>
+                </div>
+            </div>
+
+            <div class="photos-section">
+                <!-- Original Photos -->
+                <div class="photo-row">
+                    <h2>Zdjęcia oryginalne</h2>
+                    <p class="photos-instruction">Kliknij zdjęcie aby wybrać do fotobudki</p>
+                    <div class="photos-grid" id="originalPhotosGrid">
+                        <div class="photo-slot empty">📷</div>
+                        <div class="photo-slot empty">📷</div>
+                        <div class="photo-slot empty">📷</div>
+                    </div>
+                </div>
+
+                <!-- Photobooth Button -->
+                <div class="photo-actions-center">
+                    <button id="photoBooth" class="btn btn-photobooth" disabled>✨ Stwórz fotobudkę</button>
+                </div>
+
+                <!-- Photobooth Photos -->
+                <div class="photo-row">
+                    <h2>Zdjęcia z fotobudki</h2>
+                    <p class="photos-instruction">Gotowe zdjęcia z konferencji</p>
+                    <div class="photos-grid" id="photoboothPhotosGrid">
+                        <div class="photo-slot empty">🎉</div>
+                        <div class="photo-slot empty">🎉</div>
+                        <div class="photo-slot empty">🎉</div>
+                    </div>
+                </div>
+
+                <!-- Clear Button -->
+                <div class="photo-actions-center">
+                    <button id="clearPhotos" class="btn btn-clear">🗑️ Wyczyść wszystkie</button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>📍 POZNAŃ • 30.10.2025</p>
+        </footer>
+
+        <div id="notification" class="notification hidden"></div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <div class="loading-text">Tworzenie fotobudki...</div>
+        </div>
+    </div>
+
+    <script src="nagroda-data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

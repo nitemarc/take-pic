@@ -1,0 +1,590 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --black: #000000;
+    --white: #ffffff;
+    --red: #ff0000;
+    --yellow: #ffff00;
+    --gray: #666666;
+    --light-gray: #f5f5f5;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--white);
+    min-height: 100vh;
+    color: var(--black);
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+.app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header Styles */
+header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.back-btn {
+    position: absolute;
+    left: 0;
+    top: 20px;
+    background-color: var(--black);
+    color: var(--yellow);
+    padding: 10px 20px;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 8px;
+    border: 2px solid var(--yellow);
+    transition: all 0.3s ease;
+    font-size: 1rem;
+}
+
+.back-btn:hover {
+    background-color: var(--yellow);
+    color: var(--black);
+    border-color: var(--black);
+}
+
+.logo-header {
+    background-color: var(--black);
+    color: var(--white);
+    padding: 30px 20px;
+    border-radius: 15px;
+    margin-bottom: 15px;
+}
+
+.logo-header h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.heart {
+    color: var(--red);
+    display: inline-block;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.subtitle {
+    font-size: 1.3rem;
+    font-weight: 300;
+    color: var(--white);
+}
+
+.header-hashtag {
+    background-color: var(--yellow);
+    color: var(--black);
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* Main Content */
+.main-content {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Camera Section */
+.camera-section {
+    background: var(--light-gray);
+    border: 3px solid var(--black);
+    border-radius: 20px;
+    padding: 25px;
+}
+
+.camera-container {
+    position: relative;
+    border-radius: 15px;
+    overflow: hidden;
+    background: var(--black);
+    margin-bottom: 20px;
+    border: 3px solid var(--black);
+}
+
+#video {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    object-fit: cover;
+    display: block;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 3px solid transparent;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn-start {
+    background: var(--black);
+    color: var(--yellow);
+    border-color: var(--yellow);
+}
+
+.btn-start:hover:not(:disabled) {
+    background: var(--yellow);
+    color: var(--black);
+    border-color: var(--black);
+}
+
+.btn-capture {
+    background: var(--red);
+    color: var(--white);
+    font-size: 1.3rem;
+    padding: 18px 40px;
+}
+
+.btn-capture:hover:not(:disabled) {
+    background: #cc0000;
+}
+
+.btn-stop {
+    background: var(--gray);
+    color: var(--white);
+}
+
+.btn-stop:hover:not(:disabled) {
+    background: #555555;
+}
+
+/* Photos Section */
+.photos-section {
+    background: var(--light-gray);
+    border: 3px solid var(--black);
+    border-radius: 20px;
+    padding: 25px;
+}
+
+.photo-row {
+    margin-bottom: 30px;
+}
+
+.photo-row h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: var(--black);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.photos-instruction {
+    text-align: center;
+    color: var(--gray);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.photo-actions-center {
+    display: flex;
+    justify-content: center;
+    margin: 25px 0;
+}
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.photo-slot {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: visible;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.photo-slot-image {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid var(--black);
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.photo-slot.empty .photo-slot-image {
+    background: var(--white);
+    color: var(--gray);
+    font-size: 2rem;
+    border-style: dashed;
+}
+
+.photo-slot-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.photo-slot-image:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.photo-slot.selected .photo-slot-image {
+    border-color: var(--red);
+    border-width: 5px;
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.3);
+}
+
+.photo-download-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: var(--black);
+    color: var(--white);
+    border: 2px solid var(--black);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+}
+
+.photo-download-btn:hover {
+    background: var(--yellow);
+    color: var(--black);
+    border-color: var(--black);
+    transform: translateY(-2px);
+}
+
+.photo-download-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.photo-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-photobooth {
+    background: var(--yellow);
+    color: var(--black);
+    border-color: var(--black);
+    font-size: 1.2rem;
+    padding: 18px 30px;
+}
+
+.btn-photobooth:hover:not(:disabled) {
+    background: var(--black);
+    color: var(--yellow);
+    border-color: var(--yellow);
+}
+
+.btn-download {
+    background: var(--black);
+    color: var(--white);
+}
+
+.btn-download:hover:not(:disabled) {
+    background: #333333;
+}
+
+.btn-clear {
+    background: var(--red);
+    color: var(--white);
+}
+
+.btn-clear:hover:not(:disabled) {
+    background: #cc0000;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 20px;
+    background-color: var(--red);
+    color: var(--white);
+    font-weight: bold;
+    font-size: 1.2rem;
+    border-radius: 10px;
+}
+
+/* Notifications */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    transform: translateX(100%);
+    border: 3px solid var(--black);
+    max-width: 300px;
+}
+
+.notification.show {
+    transform: translateX(0);
+}
+
+.notification.hidden {
+    transform: translateX(100%);
+}
+
+.notification.success {
+    background: #28a745;
+}
+
+.notification.error {
+    background: var(--red);
+}
+
+.notification.info {
+    background: var(--black);
+}
+
+.notification.warning {
+    background: #ffa500;
+    color: var(--black);
+}
+
+/* Loading Spinner */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid var(--white);
+    border-top: 6px solid var(--yellow);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    color: var(--white);
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.photo-slot-image img {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+    .main-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .back-btn {
+        position: static;
+        display: block;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-container {
+        padding: 10px;
+    }
+
+    .logo-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .header-hashtag {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+
+    .camera-section,
+    .photos-section {
+        padding: 15px;
+    }
+
+    #video {
+        min-height: 300px;
+    }
+
+    .camera-controls {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+
+    .btn-capture {
+        font-size: 1.1rem;
+        padding: 15px 30px;
+    }
+
+    .photos-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .photos-section h2 {
+        font-size: 1.4rem;
+    }
+
+    .photos-instruction {
+        font-size: 0.8rem;
+    }
+
+    .footer {
+        font-size: 1rem;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-header {
+        padding: 20px 15px;
+    }
+
+    .logo-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .header-hashtag {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+    }
+
+    #video {
+        min-height: 250px;
+    }
+
+    .btn {
+        font-size: 0.9rem;
+        padding: 10px 15px;
+    }
+
+    .btn-capture {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+
+    .btn-photobooth {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+
+    .photo-slot.empty .photo-slot-image {
+        font-size: 1.5rem;
+    }
+
+    .photo-download-btn {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+}

@@ -15,25 +15,19 @@ class TakePicApp {
         this.video = document.getElementById('video');
         this.canvas = document.getElementById('canvas');
         this.ctx = this.canvas.getContext('2d');
-        this.photosGrid = document.getElementById('photosGrid');
+        this.originalPhotosGrid = document.getElementById('originalPhotosGrid');
+        this.photoboothPhotosGrid = document.getElementById('photoboothPhotosGrid');
         this.notification = document.getElementById('notification');
-        
+
         this.startCameraBtn = document.getElementById('startCamera');
         this.capturePhotoBtn = document.getElementById('capturePhoto');
         this.stopCameraBtn = document.getElementById('stopCamera');
         this.clearPhotosBtn = document.getElementById('clearPhotos');
-        this.downloadPhotoBtn = document.getElementById('downloadPhoto');
         this.photoBoothBtn = document.getElementById('photoBooth');
-        
-        this.filterBtns = document.querySelectorAll('.filter-btn');
-        // AI elements removed from simplified interface
-        this.aiPromptInput = null;
-        this.apiKeyInput = null;
-        this.applyAIBtn = null;
-        this.aiStatus = null;
-        
+
         this.stream = null;
-        this.photos = [];
+        this.originalPhotos = [];
+        this.photoboothPhotos = [];
         this.selectedPhotoIndex = null;
         this.currentFilter = 'none';
         this.apiKey = localStorage.getItem('gemini_api_key') || '';
@@ -134,20 +128,25 @@ class TakePicApp {
     }
     
     initEventListeners() {
-        this.startCameraBtn.addEventListener('click', () => this.startCamera());
-        this.capturePhotoBtn.addEventListener('click', () => this.capturePhoto());
-        this.stopCameraBtn.addEventListener('click', () => this.stopCamera());
-        this.clearPhotosBtn.addEventListener('click', () => this.clearAllPhotos());
-        this.downloadPhotoBtn.addEventListener('click', () => this.downloadSelectedPhoto());
-        this.photoBoothBtn.addEventListener('click', () => this.createPhotoBooth());
-        
-        this.filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => this.applyFilter(btn.dataset.filter));
-        });
-        
+        if (this.startCameraBtn) {
+            this.startCameraBtn.addEventListener('click', () => this.startCamera());
+        }
+        if (this.capturePhotoBtn) {
+            this.capturePhotoBtn.addEventListener('click', () => this.capturePhoto());
+        }
+        if (this.stopCameraBtn) {
+            this.stopCameraBtn.addEventListener('click', () => this.stopCamera());
+        }
+        if (this.clearPhotosBtn) {
+            this.clearPhotosBtn.addEventListener('click', () => this.clearAllPhotos());
+        }
+        if (this.photoBoothBtn) {
+            this.photoBoothBtn.addEventListener('click', () => this.createPhotoBooth());
+        }
+
         // Initialize AI for PhotoBooth only
         this.initGenAI();
-        
+
         window.addEventListener('beforeunload', () => {
             this.stopCamera();
         });
@@ -155,33 +154,44 @@ class TakePicApp {
     
     async startCamera() {
         try {
+            // iOS-friendly constraints
             const constraints = {
                 video: {
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 },
+                    width: { ideal: 1280, max: 1920 },
+                    height: { ideal: 720, max: 1080 },
                     facingMode: 'user'
                 },
                 audio: false
             };
-            
+
             this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             this.video.srcObject = this.stream;
-            
+
+            // iOS requires play() to be called
+            await this.video.play();
+
             this.video.onloadedmetadata = () => {
                 this.canvas.width = this.video.videoWidth;
                 this.canvas.height = this.video.videoHeight;
             };
-            
+
             this.startCameraBtn.disabled = true;
             this.capturePhotoBtn.disabled = false;
             this.stopCameraBtn.disabled = false;
-            
-            document.querySelector('.camera-container').classList.add('recording');
-            this.showNotification('Kamera włączona pomyślnie!', 'success');
-            
+
+            const container = document.querySelector('.camera-container');
+            if (container) container.classList.add('recording');
+            this.showNotification('Kamera włączona!', 'success');
+
         } catch (error) {
-            console.error('Błąd podczas uruchamiania kamery:', error);
-            this.showNotification('Nie udało się włączyć kamery. Sprawdź uprawnienia.', 'error');
+            console.error('Camera error:', error);
+            let errorMsg = 'Nie udało się włączyć kamery.';
+            if (error.name === 'NotAllowedError') {
+                errorMsg = 'Brak uprawnień do kamery. Sprawdź ustawienia.';
+            } else if (error.name === 'NotFoundError') {
+                errorMsg = 'Nie znaleziono kamery.';
+            }
+            this.showNotification(errorMsg, 'error');
         }
     }
     
@@ -213,41 +223,40 @@ class TakePicApp {
         }
         
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-        const dataURL = this.canvas.toDataURL('image/jpeg', 0.6); // Lower quality to save space
-        
+        const dataURL = this.canvas.toDataURL('image/jpeg', 0.6);
+
         const photo = {
             id: Date.now(),
             data: dataURL,
             timestamp: new Date().toLocaleString('pl-PL')
         };
-        
-        this.photos.unshift(photo);
-        
-        // Keep only 5 photos to prevent localStorage overflow
-        if (this.photos.length > 5) {
-            this.photos = this.photos.slice(0, 5);
+
+        this.originalPhotos.unshift(photo);
+
+        // Keep only 3 original photos
+        if (this.originalPhotos.length > 3) {
+            this.originalPhotos = this.originalPhotos.slice(0, 3);
         }
-        
+
         // Update selection index since we added photo at beginning
         if (this.selectedPhotoIndex !== null) {
             this.selectedPhotoIndex++;
-            // If selection is now out of bounds, reset it
-            if (this.selectedPhotoIndex >= this.photos.length) {
+            if (this.selectedPhotoIndex >= this.originalPhotos.length) {
                 this.selectedPhotoIndex = null;
             }
         }
-        
+
         // Update photo usage counter (only if limits are enabled)
         if (this.limitsEnabled) {
             this.photosUsed++;
             this.saveHourlyLimits();
         }
-        
+
         this.savePhotosToStorage();
         this.updatePhotosGrid();
         this.updateUsageLimits();
         this.showNotification(`Zdjęcie zapisane! (${this.photosUsed}/${this.maxPhotos})`, 'success');
-        
+
         this.animateCapture();
     }
     
@@ -273,89 +282,107 @@ class TakePicApp {
     }
     
     updatePhotosGrid() {
-        const photoSlots = this.photosGrid.querySelectorAll('.photo-slot');
-        console.log(`🔄 Updating photos grid: ${this.photos.length} photos, ${photoSlots.length} slots`);
-        console.log(`🎪 PhotoBooth button state before update: disabled=${this.photoBoothBtn.disabled}, selectedIndex=${this.selectedPhotoIndex}`);
-        
+        // Update original photos grid
+        this.updatePhotoRow(this.originalPhotosGrid, this.originalPhotos, true, '📷');
+
+        // Update photobooth photos grid
+        this.updatePhotoRow(this.photoboothPhotosGrid, this.photoboothPhotos, false, '🎉');
+    }
+
+    updatePhotoRow(gridElement, photosArray, isSelectable, emptyIcon) {
+        const photoSlots = gridElement.querySelectorAll('.photo-slot');
+
         photoSlots.forEach((slot, index) => {
             slot.innerHTML = '';
             slot.className = 'photo-slot';
-            
-            if (this.photos[index]) {
+
+            if (photosArray[index]) {
+                // Create image container
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'photo-slot-image';
+
                 const img = document.createElement('img');
-                img.src = this.photos[index].data;
+                img.src = photosArray[index].data;
                 img.alt = `Zdjęcie ${index + 1}`;
-                
-                // Better tooltip for AI photos
-                let title = `Wykonane: ${this.photos[index].timestamp}`;
-                if (this.photos[index].aiPrompt) {
-                    title += `\n🤖 AI: ${this.photos[index].aiPrompt}`;
-                }
-                img.title = title;
-                
-                // Add error handling for broken images
+                img.title = `Wykonane: ${photosArray[index].timestamp}`;
+
                 img.onerror = () => {
-                    console.error('Failed to load image:', {
-                        index,
-                        hasData: !!this.photos[index].data,
-                        dataLength: this.photos[index].data?.length,
-                        dataPrefix: this.photos[index].data?.substring(0, 50),
-                        isAI: !!this.photos[index].aiPrompt
-                    });
+                    console.error('Failed to load image:', index);
                     img.alt = '❌ Błąd ładowania';
                 };
-                
-                slot.appendChild(img);
-                
-                slot.addEventListener('click', (event) => {
-                    console.log(`🖱️ Clicked on photo slot ${index}`);
-                    event.preventDefault();
-                    this.selectPhoto(index);
+
+                imageContainer.appendChild(img);
+
+                // Add click handler only for selectable (original) photos
+                if (isSelectable) {
+                    imageContainer.addEventListener('click', () => {
+                        this.selectPhoto(index);
+                    });
+                }
+
+                slot.appendChild(imageContainer);
+
+                // Create download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'photo-download-btn';
+                downloadBtn.textContent = '💾 Pobierz';
+                downloadBtn.addEventListener('click', () => {
+                    this.downloadPhotoByIndex(photosArray, index);
                 });
+
+                slot.appendChild(downloadBtn);
+
             } else {
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'photo-slot-image';
+                imageContainer.textContent = emptyIcon;
                 slot.classList.add('empty');
-                slot.textContent = '📷';
+                slot.appendChild(imageContainer);
             }
         });
-        
-        // Only reset selection if the selected photo no longer exists
-        if (this.selectedPhotoIndex !== null && this.selectedPhotoIndex >= this.photos.length) {
-            this.selectedPhotoIndex = null;
-            this.downloadPhotoBtn.disabled = true;
-            this.photoBoothBtn.disabled = true;
-        }
-        
-        // Restore selection visual if photo is still selected
-        if (this.selectedPhotoIndex !== null && this.selectedPhotoIndex < this.photos.length) {
-            photoSlots[this.selectedPhotoIndex]?.classList.add('selected');
-            // Re-enable buttons when photo is selected
-            this.downloadPhotoBtn.disabled = false;
-            this.photoBoothBtn.disabled = false;
-            console.log(`🎪 PhotoBooth button re-enabled for selected photo ${this.selectedPhotoIndex}`);
+
+        // Update selection visual for original photos
+        if (isSelectable && this.selectedPhotoIndex !== null) {
+            if (this.selectedPhotoIndex < photosArray.length) {
+                photoSlots[this.selectedPhotoIndex]?.classList.add('selected');
+                this.photoBoothBtn.disabled = false;
+            } else {
+                this.selectedPhotoIndex = null;
+                this.photoBoothBtn.disabled = true;
+            }
         }
     }
     
     selectPhoto(index) {
-        console.log(`📸 Selecting photo ${index}, total photos: ${this.photos.length}`);
-        const photoSlots = this.photosGrid.querySelectorAll('.photo-slot');
-        
+        const photoSlots = this.originalPhotosGrid.querySelectorAll('.photo-slot');
+
         photoSlots.forEach(slot => slot.classList.remove('selected'));
-        
+
         if (this.selectedPhotoIndex === index) {
-            console.log('🔄 Deselecting photo');
             this.selectedPhotoIndex = null;
-            this.downloadPhotoBtn.disabled = true;
             this.photoBoothBtn.disabled = true;
         } else {
-            console.log(`✅ Photo ${index} selected`);
             this.selectedPhotoIndex = index;
             photoSlots[index].classList.add('selected');
-            this.downloadPhotoBtn.disabled = false;
-            // Enable photobooth - API key will be requested when needed
             this.photoBoothBtn.disabled = false;
-            console.log('🎪 PhotoBooth button enabled');
         }
-        
+    }
+
+    downloadPhotoByIndex(photosArray, index) {
+        const photo = photosArray[index];
+        if (!photo || !photo.data) {
+            this.showNotification('❌ Błąd pobierania zdjęcia', 'error');
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.download = `ilovemarketing_${photo.id}.jpg`;
+        link.href = photo.data;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        this.showNotification('💾 Zdjęcie pobrane!', 'success');
     }
     
     initGenAI() {
@@ -363,108 +390,16 @@ class TakePicApp {
         console.log('GenAI (curl mode) initialized:', !!this.genAI);
     }
     
-    downloadSelectedPhoto() {
-        if (this.selectedPhotoIndex === null) {
-            this.showNotification('Wybierz zdjęcie do pobrania', 'error');
-            return;
-        }
-        
-        const photo = this.photos[this.selectedPhotoIndex];
-        
-        // Enhanced validation
-        if (!photo) {
-            this.showNotification('❌ Nie znaleziono wybranego zdjęcia', 'error');
-            return;
-        }
-        
-        if (!photo.data || typeof photo.data !== 'string') {
-            this.showNotification('❌ Zdjęcie ma nieprawidłowy format danych', 'error');
-            console.error('Invalid photo data:', {
-                hasData: !!photo.data,
-                dataType: typeof photo.data,
-                dataPrefix: photo.data?.substring(0, 50),
-                isAI: !!photo.aiPrompt
-            });
-            return;
-        }
-        
-        if (!photo.data.startsWith('data:image/')) {
-            this.showNotification('❌ Zdjęcie nie jest w prawidłowym formacie obrazu', 'error');
-            console.error('Not a valid image data URL:', {
-                dataPrefix: photo.data.substring(0, 50),
-                isAI: !!photo.aiPrompt
-            });
-            return;
-        }
-        
-        const link = document.createElement('a');
-        
-        // Better filename for AI photos
-        let filename = `takepic_${photo.id}`;
-        if (photo.aiPrompt) {
-            filename += `_AI`;
-        }
-        filename += '.jpg';
-        
-        link.download = filename;
-        link.href = photo.data;
-        
-        // Debugging - log photo data for AI photos
-        if (photo.aiPrompt) {
-            console.log('💾 Downloading AI photo:', {
-                id: photo.id,
-                hasData: !!photo.data,
-                dataLength: photo.data ? photo.data.length : 0,
-                dataPrefix: photo.data ? photo.data.substring(0, 30) : 'no data',
-                isValidDataURL: photo.data ? photo.data.startsWith('data:image/') : false
-            });
-        } else {
-            console.log('💾 Downloading regular photo:', {
-                id: photo.id,
-                hasData: !!photo.data,
-                dataLength: photo.data ? photo.data.length : 0
-            });
-        }
-        document.body.appendChild(link);
-        
-        // Try download and catch any errors
-        try {
-            link.click();
-            // Wait a bit to ensure download started
-            setTimeout(() => {
-                try {
-                    if (document.body.contains(link)) {
-                        document.body.removeChild(link);
-                    }
-                } catch (e) {
-                    console.warn('Failed to remove download link:', e);
-                }
-            }, 100);
-            
-            this.showNotification(photo.aiPrompt ? 'Zdjęcie AI zostało pobrane!' : 'Zdjęcie zostało pobrane!', 'success');
-        } catch (error) {
-            console.error('Download failed:', error);
-            this.showNotification('❌ Błąd podczas pobierania zdjęcia', 'error');
-            
-            // Clean up on error
-            try {
-                if (document.body.contains(link)) {
-                    document.body.removeChild(link);
-                }
-            } catch (e) {
-                console.warn('Failed to remove download link after error:', e);
-            }
-        }
-    }
     
     clearAllPhotos() {
-        if (this.photos.length === 0) {
+        if (this.originalPhotos.length === 0 && this.photoboothPhotos.length === 0) {
             this.showNotification('Brak zdjęć do usunięcia', 'info');
             return;
         }
-        
+
         if (confirm('Czy na pewno chcesz usunąć wszystkie zdjęcia?')) {
-            this.photos = [];
+            this.originalPhotos = [];
+            this.photoboothPhotos = [];
             this.selectedPhotoIndex = null;
             this.savePhotosToStorage();
             this.updatePhotosGrid();
@@ -472,46 +407,6 @@ class TakePicApp {
         }
     }
     
-    applyFilter(filterName) {
-        this.currentFilter = filterName;
-        
-        this.filterBtns.forEach(btn => btn.classList.remove('active'));
-        document.querySelector(`[data-filter="${filterName}"]`).classList.add('active');
-        
-        let filterCSS = '';
-        
-        switch (filterName) {
-            case 'none':
-                filterCSS = 'none';
-                break;
-            case 'sepia':
-                filterCSS = 'sepia(100%)';
-                break;
-            case 'grayscale':
-                filterCSS = 'grayscale(100%)';
-                break;
-            case 'blur':
-                filterCSS = 'blur(2px)';
-                break;
-            case 'brightness':
-                filterCSS = 'brightness(130%)';
-                break;
-            case 'contrast':
-                filterCSS = 'contrast(130%)';
-                break;
-            case 'saturate':
-                filterCSS = 'saturate(200%)';
-                break;
-            case 'vintage':
-                filterCSS = 'sepia(50%) contrast(120%) brightness(110%) saturate(130%)';
-                break;
-            default:
-                filterCSS = 'none';
-        }
-        
-        this.video.style.filter = filterCSS;
-        this.showNotification(`Filtr ${filterName} zastosowany!`, 'success');
-    }
     
     
     
@@ -573,27 +468,7 @@ class TakePicApp {
             this.showNotification('Wybierz zdjęcie do przerobienia na fotobudkę', 'error');
             return;
         }
-        
-        // Prompt for API key if not available
-        if (!this.apiKey) {
-            const savedKey = localStorage.getItem('gemini_api_key');
-            if (savedKey) {
-                this.apiKey = savedKey;
-                this.initGenAI();
-                console.log('🔑 Using saved API key');
-            } else {
-                const apiKey = prompt('Wprowadź klucz API Google Gemini dla funkcji fotobudki:');
-                if (!apiKey || apiKey.trim() === '') {
-                    this.showNotification('Klucz API jest wymagany dla fotobudki', 'error');
-                    return;
-                }
-                this.apiKey = apiKey.trim();
-                localStorage.setItem('gemini_api_key', this.apiKey);
-                this.initGenAI();
-                console.log('🔑 API key saved for future use');
-            }
-        }
-        
+
         if (!this.nagrodaBase64) {
             this.showNotification('Błąd: Nie załadowano pliku nagroda.png', 'error');
             return;
@@ -605,68 +480,73 @@ class TakePicApp {
             return;
         }
         
+        // Show loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.classList.remove('hidden');
+        }
+
         this.photoBoothBtn.disabled = true;
-        this.photoBoothBtn.textContent = '📸 Tworzenie...';
-        
+        const originalText = this.photoBoothBtn.textContent;
+        this.photoBoothBtn.textContent = '⏳ Czekaj...';
+
         try {
-            const selectedPhoto = this.photos[this.selectedPhotoIndex];
+            const selectedPhoto = this.originalPhotos[this.selectedPhotoIndex];
             const userImageBase64 = selectedPhoto.data.replace(/^data:image\/[a-z]+;base64,/, '');
-            
-            const photoBoothPrompt = "Edit this photo so it looks like a photobooth picture taken at the I ❤️ Marketing & Technology conference. Add a professional backdrop with the I ❤️ Marketing & Technology white logo on black background repeated like on an event step-and-repeat wall. Realistic style, high-quality event photography. Studio-like lighting, polished look, authentic conference vibe. Provided person keeps the heart statue in hand. Add a small white caption on the bottom with black text \"Poznan, 30.10.2025\"";
-            
+
+            const photoBoothPrompt = "Edit this photo so it looks like a photobooth picture taken at the I ❤️ Marketing & Technology conference. Add a professional backdrop with the I ❤️ Marketing & Technology white logo on black background repeated like on an event step-and-repeat wall. Ensure hearts are red. Realistic style, high-quality event photography. Studio-like lighting, polished look, authentic conference vibe. Provided person keeps the heart statue in hand. Add a small white caption on the bottom with black text \"Poznan, 30.10.2025\" next to the hashtag \"#ilovemtk\" in white text on red background.";
+
             const response = await this.callGeminiPhotoBoothAPI(userImageBase64, this.nagrodaBase64, photoBoothPrompt);
-            
+
             if (response.type === 'image') {
-                // Compress the PhotoBooth image more aggressively to avoid localStorage overflow
                 const compressedImage = await this.compressImageBase64(`data:image/jpeg;base64,${response.data}`, 0.3);
-                
+
                 const newPhoto = {
                     id: Date.now(),
                     data: compressedImage,
-                    timestamp: new Date().toLocaleString('pl-PL'),
-                    aiPrompt: 'Fotobudka I ❤️ Marketing & Technology',
-                    aiDescription: 'Fotobudka konferencyjna z nagrodą'
+                    timestamp: new Date().toLocaleString('pl-PL')
                 };
-                
-                // For PhotoBooth images, keep only 2 photos to prevent localStorage overflow
-                this.photos.unshift(newPhoto);
-                if (this.photos.length > 2) {
-                    this.photos = this.photos.slice(0, 2);
-                    console.log('📸 PhotoBooth: Keeping only 2 photos to save space');
+
+                // Add to photobooth photos array (keep only 3)
+                this.photoboothPhotos.unshift(newPhoto);
+                if (this.photoboothPhotos.length > 3) {
+                    this.photoboothPhotos = this.photoboothPhotos.slice(0, 3);
                 }
-                
-                // Update selection index since we added photo at beginning
-                if (this.selectedPhotoIndex !== null) {
-                    this.selectedPhotoIndex++;
-                    // If selection is now out of bounds, reset it
-                    if (this.selectedPhotoIndex >= this.photos.length) {
-                        this.selectedPhotoIndex = null;
-                    }
-                }
-                
-                // Update AI usage counter (only if limits are enabled)
+
+                // Update AI usage counter
                 if (this.limitsEnabled) {
                     this.aiRequestsUsed++;
                     this.saveHourlyLimits();
                 }
-                
-                // Clear localStorage completely before saving PhotoBooth result
-                localStorage.removeItem('takepic_photos');
+
+                // Deselect photo
+                this.selectedPhotoIndex = null;
+
                 this.savePhotosToStorage();
                 this.updatePhotosGrid();
                 this.updateUsageLimits();
-                
-                this.showNotification('🏆 Fotobudka utworzona! Stare zdjęcia usunięte aby zaoszczędzić miejsce.', 'success');
+
+                this.showNotification('🏆 Fotobudka utworzona!', 'success');
             } else {
                 this.showNotification('❌ Nie udało się wygenerować fotobudki', 'error');
             }
             
         } catch (error) {
             console.error('PhotoBooth error:', error);
-            this.showNotification(`❌ Błąd fotobudki: ${error.message}`, 'error');
+            let errorMsg = 'Błąd fotobudki';
+            if (error.message.includes('Failed to fetch')) {
+                errorMsg = 'Brak połączenia z API. Sprawdź internet.';
+            } else if (error.message) {
+                errorMsg = `Błąd: ${error.message}`;
+            }
+            this.showNotification(`❌ ${errorMsg}`, 'error');
         } finally {
+            // Hide loading overlay
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('hidden');
+            }
             this.photoBoothBtn.disabled = false;
-            this.photoBoothBtn.textContent = '📸 Fotobudka';
+            this.photoBoothBtn.textContent = '✨ Stwórz fotobudkę';
         }
     }
     
@@ -682,7 +562,7 @@ class TakePicApp {
                     },
                     {
                         inline_data: {
-                            mime_type: "image/png", 
+                            mime_type: "image/png",
                             data: nagrodaImageBase64
                         }
                     },
@@ -692,41 +572,41 @@ class TakePicApp {
                 ]
             }]
         };
-        
-        console.log('📸 Sending PhotoBooth API request...');
-        
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent`, {
+
+        console.log('📸 Sending PhotoBooth request to proxy...');
+
+        // Use API endpoint (works locally and on Vercel)
+        const response = await fetch('/api/photobooth', {
             method: 'POST',
             headers: {
-                'x-goog-api-key': this.apiKey,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(requestBody)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json();
-            console.error('PhotoBooth API Error:', errorData);
-            throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+            console.error('Proxy API Error:', errorData);
+            throw new Error(errorData.error || `HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
-        console.log('PhotoBooth API Response:', data);
-        
+        console.log('Proxy API Response received');
+
         if (data.candidates && data.candidates[0] && data.candidates[0].content) {
             const parts = data.candidates[0].content.parts;
-            
+
             for (const part of parts) {
                 if (part.inline_data && part.inline_data.data) {
-                    console.log('🎉 PhotoBooth image generated successfully!');
+                    console.log('🎉 PhotoBooth image generated!');
                     return {
                         type: 'image',
                         data: part.inline_data.data
                     };
                 }
-                
+
                 if (part.inlineData && part.inlineData.data) {
-                    console.log('🎉 PhotoBooth image generated successfully (inlineData)!');
+                    console.log('🎉 PhotoBooth image generated!');
                     return {
                         type: 'image',
                         data: part.inlineData.data
@@ -734,7 +614,7 @@ class TakePicApp {
                 }
             }
         }
-        
+
         return {
             type: 'text',
             data: 'No image generated'
@@ -828,39 +708,49 @@ class TakePicApp {
     
     savePhotosToStorage() {
         try {
-            const photosToSave = this.photos.map(photo => ({
-                id: photo.id,
-                data: photo.data,
-                timestamp: photo.timestamp,
-                aiPrompt: photo.aiPrompt,
-                aiDescription: photo.aiDescription
-            }));
-            localStorage.setItem('takepic_photos', JSON.stringify(photosToSave));
+            const dataToSave = {
+                original: this.originalPhotos.map(photo => ({
+                    id: photo.id,
+                    data: photo.data,
+                    timestamp: photo.timestamp
+                })),
+                photobooth: this.photoboothPhotos.map(photo => ({
+                    id: photo.id,
+                    data: photo.data,
+                    timestamp: photo.timestamp
+                }))
+            };
+            localStorage.setItem('takepic_photos', JSON.stringify(dataToSave));
             this.checkStorageUsage();
         } catch (error) {
             console.error('Błąd podczas zapisywania zdjęć:', error);
-            
+
             if (error.name === 'QuotaExceededError') {
-                // Auto-cleanup: keep only 2 most recent photos
                 console.log('localStorage full, auto-cleanup...');
-                this.photos = this.photos.slice(0, 2);
-                
+                this.photoboothPhotos = this.photoboothPhotos.slice(0, 2);
+                this.originalPhotos = this.originalPhotos.slice(0, 2);
+
                 try {
-                    const photosToSave = this.photos.map(photo => ({
-                        id: photo.id,
-                        data: photo.data,
-                        timestamp: photo.timestamp,
-                        aiPrompt: photo.aiPrompt,
-                        aiDescription: photo.aiDescription
-                    }));
-                    localStorage.setItem('takepic_photos', JSON.stringify(photosToSave));
+                    const dataToSave = {
+                        original: this.originalPhotos.map(photo => ({
+                            id: photo.id,
+                            data: photo.data,
+                            timestamp: photo.timestamp
+                        })),
+                        photobooth: this.photoboothPhotos.map(photo => ({
+                            id: photo.id,
+                            data: photo.data,
+                            timestamp: photo.timestamp
+                        }))
+                    };
+                    localStorage.setItem('takepic_photos', JSON.stringify(dataToSave));
                     this.showNotification('⚠️ Pamięć pełna - usunięto starsze zdjęcia', 'warning');
                     this.updatePhotosGrid();
                     this.checkStorageUsage();
                 } catch (retryError) {
-                    // If still fails, clear all photos
                     console.error('Failed to save even after cleanup:', retryError);
-                    this.photos = [];
+                    this.originalPhotos = [];
+                    this.photoboothPhotos = [];
                     localStorage.removeItem('takepic_photos');
                     this.showNotification('❌ Pamięć przepełniona - wyczyszczono wszystkie zdjęcia', 'error');
                     this.updatePhotosGrid();
@@ -875,19 +765,38 @@ class TakePicApp {
         try {
             const stored = localStorage.getItem('takepic_photos');
             if (stored) {
-                this.photos = JSON.parse(stored);
-                console.log(`📷 Loaded ${this.photos.length} photos from storage`);
-                
+                const data = JSON.parse(stored);
+
+                // Handle old format (array) or new format (object)
+                if (Array.isArray(data)) {
+                    // Old format - migrate to new format
+                    this.originalPhotos = data.filter(p => !p.aiPrompt);
+                    this.photoboothPhotos = data.filter(p => p.aiPrompt);
+                    console.log('📷 Migrated old format to new format');
+                } else {
+                    // New format
+                    this.originalPhotos = data.original || [];
+                    this.photoboothPhotos = data.photobooth || [];
+                }
+
                 // Validate photo data
-                this.photos = this.photos.filter(photo => {
+                this.originalPhotos = this.originalPhotos.filter(photo => {
                     if (!photo.data || !photo.data.startsWith('data:image/')) {
-                        console.warn('Removing invalid photo:', photo.id);
+                        console.warn('Removing invalid original photo:', photo.id);
                         return false;
                     }
                     return true;
                 });
-                
-                console.log(`📷 After validation: ${this.photos.length} valid photos`);
+
+                this.photoboothPhotos = this.photoboothPhotos.filter(photo => {
+                    if (!photo.data || !photo.data.startsWith('data:image/')) {
+                        console.warn('Removing invalid photobooth photo:', photo.id);
+                        return false;
+                    }
+                    return true;
+                });
+
+                console.log(`📷 Loaded ${this.originalPhotos.length} original, ${this.photoboothPhotos.length} photobooth photos`);
             } else {
                 console.log('📷 No photos found in storage');
             }
@@ -895,7 +804,8 @@ class TakePicApp {
             console.error('Błąd podczas ładowania zdjęć:', error);
             console.log('📷 Clearing corrupted localStorage data...');
             localStorage.removeItem('takepic_photos');
-            this.photos = [];
+            this.originalPhotos = [];
+            this.photoboothPhotos = [];
         }
     }
     
@@ -932,14 +842,3 @@ window.addEventListener('error', (event) => {
     console.error('Błąd aplikacji:', event.error);
 });
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-                console.log('SW registered: ', registration);
-            })
-            .catch((registrationError) => {
-                console.log('SW registration failed: ', registrationError);
-            });
-    });
-}

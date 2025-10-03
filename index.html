@@ -3,59 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TakePic - Aplikacja do robienia zdjęć</title>
-    <link rel="stylesheet" href="style.css">
+    <title>I ❤️ Marketing & Technology - Konferencja Poznań</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .logo {
+            background-color: black;
+            color: white;
+            padding: 40px 30px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+        }
+
+        .heart {
+            color: red;
+            font-size: 3.5rem;
+            display: inline-block;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: white;
+            font-weight: 300;
+        }
+
+        .date-location {
+            background-color: red;
+            color: white;
+            padding: 20px 30px;
+            margin-bottom: 40px;
+            border-radius: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            box-shadow: 0 5px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .activities {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .activity-card {
+            background: linear-gradient(135deg, #000000 0%, #2d2d2d 100%);
+            color: white;
+            padding: 50px 30px;
+            border-radius: 20px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .activity-card:hover {
+            transform: translateY(-10px);
+            border-color: red;
+            box-shadow: 0 15px 40px rgba(255, 0, 0, 0.3);
+        }
+
+        .activity-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .activity-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .activity-description {
+            font-size: 1.1rem;
+            color: #cccccc;
+            line-height: 1.4;
+        }
+
+        .hashtag {
+            background-color: yellow;
+            color: black;
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .logo h1 {
+                font-size: 2rem;
+            }
+
+            .heart {
+                font-size: 2.5rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .date-location {
+                font-size: 1rem;
+                padding: 15px 20px;
+            }
+
+            .activities {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .activity-card {
+                padding: 40px 20px;
+            }
+
+            .activity-icon {
+                font-size: 3rem;
+            }
+
+            .activity-title {
+                font-size: 1.5rem;
+            }
+
+            .activity-description {
+                font-size: 1rem;
+            }
+
+            .hashtag {
+                font-size: 1.2rem;
+                padding: 12px 25px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            .logo {
+                padding: 20px 15px;
+            }
+
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+
+            .heart {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 0.85rem;
+            }
+
+            .date-location {
+                font-size: 0.9rem;
+                padding: 12px 15px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <h1>📸 TakePic</h1>
-            <p>Rób piękne zdjęcia swoją kamerką</p>
-        </header>
-        
-        <main class="main-content">
-            <div class="camera-section">
-                <div class="camera-container">
-                    <video id="video" autoplay playsinline></video>
-                    <canvas id="canvas" style="display: none;"></canvas>
-                </div>
-                <div class="filters-section">
-                    <h3>🎨 Filtry Real-time</h3>
-                    <div class="filters-grid">
-                        <button class="filter-btn active" data-filter="none">Oryginalny</button>
-                        <button class="filter-btn" data-filter="contrast">Kontrast</button>
-                        <button class="filter-btn" data-filter="sepia">Sepia</button>
-                    </div>
-                </div>
-                
-                
-                <div class="camera-controls">
-                    <button id="startCamera" class="btn btn-primary">🎥 Włącz kamerę</button>
-                    <button id="capturePhoto" class="btn btn-capture" disabled>📷 Zrób zdjęcie</button>
-                    <button id="stopCamera" class="btn btn-secondary" disabled>⏹️ Zatrzymaj</button>
-                </div>
-            </div>
-            
-            <div class="photos-section">
-                <h2>Ostatnie zdjęcia</h2>
-                <div class="photos-grid" id="photosGrid">
-                    <div class="photo-slot empty">📷</div>
-                    <div class="photo-slot empty">📷</div>
-                    <div class="photo-slot empty">📷</div>
-                </div>
-                <div class="photo-actions">
-                    <button id="clearPhotos" class="btn btn-danger">🗑️ Wyczyść wszystkie</button>
-                    <button id="downloadPhoto" class="btn btn-download" disabled>💾 Pobierz wybrane</button>
-                    <button id="photoBooth" class="btn btn-special" disabled>📸 Fotobudka</button>
-                </div>
-            </div>
-        </main>
-        
-        <div id="notification" class="notification hidden"></div>
+    <div class="container">
+        <div class="logo">
+            <h1>I <span class="heart">❤️</span> MARKETING</h1>
+            <p class="subtitle">& TECHNOLOGY</p>
+        </div>
+
+        <div class="date-location">
+            📍 POZNAŃ • 30.10.2025
+        </div>
+
+        <div class="activities">
+            <a href="snake-game.html" class="activity-card">
+                <span class="activity-icon">🐍</span>
+                <div class="activity-title">Zagraj w Węża</div>
+                <div class="activity-description">Gra retro ŻmijAI z konferencyjnym twistem</div>
+            </a>
+
+            <a href="photobooth.html" class="activity-card">
+                <span class="activity-icon">📸</span>
+                <div class="activity-title">Fotobudka</div>
+                <div class="activity-description">Zrób zdjęcie i stwórz pamiątkę z konferencji</div>
+            </a>
+        </div>
+
+        <div class="hashtag">#ilovemkt</div>
     </div>
-    
-    <script src="nagroda-data.js?v=3"></script>
-    <script src="particles.js?v=3"></script>
-    <script src="script.js?v=3"></script>
 </body>
 </html>
