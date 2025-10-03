@@ -3,6 +3,7 @@ import json
 import os
 import urllib.request
 import urllib.error
+import sys
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
@@ -20,11 +21,16 @@ class handler(BaseHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode('utf-8'))
 
+            print(f"[API] Received request, data size: {len(post_data)} bytes", file=sys.stderr)
+
             # Get API key from environment
             api_key = os.environ.get('GEMINI_API_KEY')
             if not api_key:
+                print("[API] ERROR: API key not configured!", file=sys.stderr)
                 self.wfile.write(json.dumps({'error': 'API key not configured'}).encode())
                 return
+
+            print(f"[API] API key found: {api_key[:10]}...", file=sys.stderr)
 
             # Forward to Gemini API
             gemini_url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent'
@@ -35,11 +41,20 @@ class handler(BaseHTTPRequestHandler):
                 headers={'Content-Type': 'application/json'}
             )
 
+            print(f"[API] Sending request to Gemini API...", file=sys.stderr)
+
             with urllib.request.urlopen(req) as response:
                 result = response.read()
+                print(f"[API] Gemini response received: {len(result)} bytes", file=sys.stderr)
                 self.wfile.write(result)
 
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode('utf-8')
+            print(f"[API] Gemini HTTP Error {e.code}: {error_body}", file=sys.stderr)
+            error_response = json.dumps({'error': f'Gemini API error: {e.code}', 'details': error_body})
+            self.wfile.write(error_response.encode())
         except Exception as e:
+            print(f"[API] Error: {str(e)}", file=sys.stderr)
             error_response = json.dumps({'error': str(e)})
             self.wfile.write(error_response.encode())
 
