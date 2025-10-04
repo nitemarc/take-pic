@@ -125,8 +125,8 @@ header {
 #video {
     width: 100%;
     height: auto;
-    min-height: 400px;
-    object-fit: cover;
+    aspect-ratio: 16 / 9;
+    object-fit: contain;
     display: block;
 }
 
@@ -504,7 +504,7 @@ header {
     }
 
     #video {
-        min-height: 300px;
+        /* Full resolution, no constraints */
     }
 
     .camera-controls {
@@ -561,7 +561,7 @@ header {
     }
 
     #video {
-        min-height: 250px;
+        /* Full resolution, no constraints */
     }
 
     .btn {
