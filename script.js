@@ -632,28 +632,31 @@ class TakePicApp {
         };
     }
     
-    async compressImageBase64(dataURL, quality = 0.5, maxWidth = 800) {
+    async compressImageBase64(dataURL, quality = 0.5, maxSize = 1024) {
         return new Promise((resolve) => {
             const img = new Image();
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                
-                // Calculate new dimensions while maintaining aspect ratio
+
+                // Keep square aspect ratio - resize both dimensions proportionally
                 let { width, height } = img;
-                if (width > maxWidth) {
-                    height = (height * maxWidth) / width;
-                    width = maxWidth;
+                const maxDimension = Math.max(width, height);
+
+                if (maxDimension > maxSize) {
+                    const scale = maxSize / maxDimension;
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
                 }
-                
+
                 canvas.width = width;
                 canvas.height = height;
-                
+
                 // Draw and compress
                 ctx.drawImage(img, 0, 0, width, height);
                 const compressedDataURL = canvas.toDataURL('image/jpeg', quality);
-                
-                console.log(`🗜️ Image compressed: ${Math.round(dataURL.length/1024)}KB → ${Math.round(compressedDataURL.length/1024)}KB`);
+
+                console.log(`🗜️ Image compressed: ${Math.round(dataURL.length/1024)}KB → ${Math.round(compressedDataURL.length/1024)}KB (${width}x${height})`);
                 resolve(compressedDataURL);
             };
             img.src = dataURL;
