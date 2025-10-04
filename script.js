@@ -154,12 +154,13 @@ class TakePicApp {
     
     async startCamera() {
         try {
-            // iOS-friendly constraints
+            // iOS-friendly constraints - use 4:3 aspect ratio for selfie cameras
             const constraints = {
                 video: {
-                    width: { ideal: 1280, max: 1920 },
-                    height: { ideal: 720, max: 1080 },
-                    facingMode: 'user'
+                    width: { ideal: 1024 },
+                    height: { ideal: 1024 },
+                    facingMode: 'user',
+                    aspectRatio: { ideal: 1 }
                 },
                 audio: false
             };
