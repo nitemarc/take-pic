@@ -172,10 +172,26 @@ class TakePicApp {
             await this.video.play();
 
             this.video.onloadedmetadata = () => {
-                // Use actual video dimensions - no cropping
-                this.canvas.width = this.video.videoWidth;
-                this.canvas.height = this.video.videoHeight;
-                console.log(`📐 Canvas set to ${this.video.videoWidth}x${this.video.videoHeight}`);
+                // Calculate display size matching CSS object-fit: contain
+                const videoRatio = this.video.videoWidth / this.video.videoHeight;
+                const containerWidth = this.video.parentElement.clientWidth;
+                const containerHeight = 500; // max-height from CSS
+                const containerRatio = containerWidth / containerHeight;
+
+                let displayWidth, displayHeight;
+                if (videoRatio > containerRatio) {
+                    // Video is wider - fit to width
+                    displayWidth = containerWidth;
+                    displayHeight = containerWidth / videoRatio;
+                } else {
+                    // Video is taller - fit to height
+                    displayHeight = containerHeight;
+                    displayWidth = containerHeight * videoRatio;
+                }
+
+                this.canvas.width = displayWidth;
+                this.canvas.height = displayHeight;
+                console.log(`📐 Canvas: ${displayWidth}x${displayHeight} | Video stream: ${this.video.videoWidth}x${this.video.videoHeight}`);
             };
 
             this.startCameraBtn.disabled = true;
