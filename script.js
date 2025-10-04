@@ -495,7 +495,7 @@ class TakePicApp {
             const selectedPhoto = this.originalPhotos[this.selectedPhotoIndex];
             const userImageBase64 = selectedPhoto.data.replace(/^data:image\/[a-z]+;base64,/, '');
 
-            const photoBoothPrompt = "Edit this photo so it looks like a photobooth picture taken at the I ❤️ Marketing & Technology conference. Add a professional backdrop with the I ❤️ Marketing & Technology white logo on black background repeated like on an event step-and-repeat wall. Ensure hearts are red. Realistic style, high-quality event photography. Studio-like lighting, polished look, authentic conference vibe. Provided person keeps the heart statue in hand. Add a small white caption on the bottom with black text \"Poznan, 30.10.2025\" next to the hashtag \"#ilovemtk\" in white text on red background.";
+            const photoBoothPrompt = "Edit this photo so it looks like a photobooth picture taken at the I ❤️  Marketing & Technology conference. Add a professional backdrop with the I ❤️  Marketing & Technology white text, hearts are red, on black background repeated like on an event step-and-repeat wall. Realistic style, high-quality event photography. Studio-like lighting, polished look, authentic conference vibe. Provided person keeps the heart statue in hand. Add a small white caption on the bottom with black text \"📍Poznan, 30.10.2025\" next to the following hashtags as white text on red background: \"#ilovemtk\", \"#iloveai\", \"#marketerprogramista\".";
 
             const response = await this.callGeminiPhotoBoothAPI(userImageBase64, this.nagrodaBase64, photoBoothPrompt);
 
