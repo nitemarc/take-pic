@@ -32,8 +32,8 @@ class handler(BaseHTTPRequestHandler):
 
             print(f"[API] API key found: {api_key[:10]}...", file=sys.stderr)
 
-            # Forward to Gemini API
-            gemini_url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent'
+            # Forward to Gemini API - using IMAGE model for image generation
+            gemini_url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent'
 
             req = urllib.request.Request(
                 f'{gemini_url}?key={api_key}',
