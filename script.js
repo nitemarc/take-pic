@@ -154,13 +154,12 @@ class TakePicApp {
     
     async startCamera() {
         try {
-            // iOS-friendly constraints - use 4:3 aspect ratio for selfie cameras
+            // High resolution constraints for quality photos
             const constraints = {
                 video: {
-                    width: { ideal: 1024 },
-                    height: { ideal: 1024 },
-                    facingMode: 'user',
-                    aspectRatio: { ideal: 1 }
+                    width: { ideal: 1920, max: 3840 },
+                    height: { ideal: 1080, max: 2160 },
+                    facingMode: 'user'
                 },
                 audio: false
             };
@@ -172,26 +171,9 @@ class TakePicApp {
             await this.video.play();
 
             this.video.onloadedmetadata = () => {
-                // Calculate display size matching CSS object-fit: contain
-                const videoRatio = this.video.videoWidth / this.video.videoHeight;
-                const containerWidth = this.video.parentElement.clientWidth;
-                const containerHeight = 500; // max-height from CSS
-                const containerRatio = containerWidth / containerHeight;
-
-                let displayWidth, displayHeight;
-                if (videoRatio > containerRatio) {
-                    // Video is wider - fit to width
-                    displayWidth = containerWidth;
-                    displayHeight = containerWidth / videoRatio;
-                } else {
-                    // Video is taller - fit to height
-                    displayHeight = containerHeight;
-                    displayWidth = containerHeight * videoRatio;
-                }
-
-                this.canvas.width = displayWidth;
-                this.canvas.height = displayHeight;
-                console.log(`📐 Canvas: ${displayWidth}x${displayHeight} | Video stream: ${this.video.videoWidth}x${this.video.videoHeight}`);
+                this.canvas.width = this.video.videoWidth;
+                this.canvas.height = this.video.videoHeight;
+                console.log(`📐 Canvas set to ${this.video.videoWidth}x${this.video.videoHeight}`);
             };
 
             this.startCameraBtn.disabled = true;
@@ -241,9 +223,8 @@ class TakePicApp {
             return;
         }
         
-        // Draw full video frame without cropping - what you see is what you get
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-        const dataURL = this.canvas.toDataURL('image/jpeg', 0.8);
+        const dataURL = this.canvas.toDataURL('image/jpeg', 0.85);
 
         const photo = {
             id: Date.now(),
@@ -519,11 +500,9 @@ class TakePicApp {
             const response = await this.callGeminiPhotoBoothAPI(userImageBase64, this.nagrodaBase64, photoBoothPrompt);
 
             if (response.type === 'image') {
-                const compressedImage = await this.compressImageBase64(`data:image/jpeg;base64,${response.data}`, 0.3);
-
                 const newPhoto = {
                     id: Date.now(),
-                    data: compressedImage,
+                    data: `data:image/jpeg;base64,${response.data}`,
                     timestamp: new Date().toLocaleString('pl-PL')
                 };
 
@@ -649,37 +628,6 @@ class TakePicApp {
             type: 'text',
             data: 'No image generated'
         };
-    }
-    
-    async compressImageBase64(dataURL, quality = 0.5, maxSize = 1024) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-
-                // Keep square aspect ratio - resize both dimensions proportionally
-                let { width, height } = img;
-                const maxDimension = Math.max(width, height);
-
-                if (maxDimension > maxSize) {
-                    const scale = maxSize / maxDimension;
-                    width = Math.round(width * scale);
-                    height = Math.round(height * scale);
-                }
-
-                canvas.width = width;
-                canvas.height = height;
-
-                // Draw and compress
-                ctx.drawImage(img, 0, 0, width, height);
-                const compressedDataURL = canvas.toDataURL('image/jpeg', quality);
-
-                console.log(`🗜️ Image compressed: ${Math.round(dataURL.length/1024)}KB → ${Math.round(compressedDataURL.length/1024)}KB (${width}x${height})`);
-                resolve(compressedDataURL);
-            };
-            img.src = dataURL;
-        });
     }
     
     updateUsageLimits() {

@@ -91,12 +91,10 @@ header p {
 
 #video {
     width: 100%;
-    height: auto;
-    max-height: 500px;
-    object-fit: contain;
+    height: 400px;
+    object-fit: cover;
     display: block;
     border-radius: 15px;
-    background: #000;
 }
 
 .camera-controls {
