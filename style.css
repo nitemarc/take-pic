@@ -354,9 +354,9 @@ header p {
     .photos-section {
         padding: 20px;
     }
-    
+
     #video {
-        height: 300px;
+        height: auto;
     }
     
     .camera-controls {
