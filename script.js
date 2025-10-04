@@ -154,11 +154,11 @@ class TakePicApp {
     
     async startCamera() {
         try {
-            // High resolution constraints for quality photos
+            // Proven working resolution from old script
             const constraints = {
                 video: {
-                    width: { ideal: 1920, max: 3840 },
-                    height: { ideal: 1080, max: 2160 },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
                     facingMode: 'user'
                 },
                 audio: false
@@ -224,7 +224,7 @@ class TakePicApp {
         }
         
         this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
-        const dataURL = this.canvas.toDataURL('image/jpeg', 0.85);
+        const dataURL = this.canvas.toDataURL('image/jpeg', 0.6);
 
         const photo = {
             id: Date.now(),
