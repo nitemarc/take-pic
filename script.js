@@ -172,11 +172,10 @@ class TakePicApp {
             await this.video.play();
 
             this.video.onloadedmetadata = () => {
-                // Force square canvas - use the smaller dimension to avoid cropping
-                const size = Math.min(this.video.videoWidth, this.video.videoHeight);
-                this.canvas.width = size;
-                this.canvas.height = size;
-                console.log(`📐 Canvas set to ${size}x${size} (video: ${this.video.videoWidth}x${this.video.videoHeight})`);
+                // Use actual video dimensions - no cropping
+                this.canvas.width = this.video.videoWidth;
+                this.canvas.height = this.video.videoHeight;
+                console.log(`📐 Canvas set to ${this.video.videoWidth}x${this.video.videoHeight}`);
             };
 
             this.startCameraBtn.disabled = true;
@@ -226,29 +225,9 @@ class TakePicApp {
             return;
         }
         
-        // Draw video centered and cropped to square
-        const videoWidth = this.video.videoWidth;
-        const videoHeight = this.video.videoHeight;
-        const canvasSize = this.canvas.width; // canvas is square
-
-        // Calculate crop to center the video in square
-        let sx, sy, sWidth, sHeight;
-        if (videoWidth > videoHeight) {
-            // Video is wider - crop sides
-            sHeight = videoHeight;
-            sWidth = videoHeight;
-            sx = (videoWidth - videoHeight) / 2;
-            sy = 0;
-        } else {
-            // Video is taller - crop top/bottom
-            sWidth = videoWidth;
-            sHeight = videoWidth;
-            sx = 0;
-            sy = (videoHeight - videoWidth) / 2;
-        }
-
-        this.ctx.drawImage(this.video, sx, sy, sWidth, sHeight, 0, 0, canvasSize, canvasSize);
-        const dataURL = this.canvas.toDataURL('image/jpeg', 0.6);
+        // Draw full video frame without cropping - what you see is what you get
+        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        const dataURL = this.canvas.toDataURL('image/jpeg', 0.8);
 
         const photo = {
             id: Date.now(),
